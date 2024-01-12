@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  GoRouter.optionURLReflectsImperativeAPIs = true;
   runApp(const MyApp());
 }
 
@@ -19,38 +20,75 @@ class MyApp extends StatelessWidget {
 }
 
 final _router = GoRouter(
+  redirect: (context, state) {
+    final index = int.tryParse(state.pathParameters['index'] ?? '');
+    if (index == null) return '/0';
+    return null;
+  },
   routes: [
     GoRoute(
-      path: '/',
-      builder: (context, state) => const HomeScreen(),
+      path: '/:index',
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: ValueKey(
+              '/${state.pathParameters['index']} ${state.pageKey.value}'),
+          transitionDuration: const Duration(milliseconds: 1500),
+          reverseTransitionDuration: const Duration(milliseconds: 1500),
+          child: const SizedBox(),
+          transitionsBuilder:
+              (context, primaryAnimation, secondaryAnimation, child) {
+            final animation =
+                secondaryAnimation.status == AnimationStatus.forward
+                    ? secondaryAnimation
+                    : primaryAnimation;
+
+            return Visibility(
+              visible: primaryAnimation.status == AnimationStatus.reverse ||
+                  (secondaryAnimation.status == AnimationStatus.forward ||
+                      primaryAnimation.isCompleted &&
+                          secondaryAnimation.isDismissed),
+              child: CircleRevealScreen(
+                animation: animation,
+              ),
+            );
+          },
+        );
+      },
     ),
   ],
 );
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    const index = 0;
-    final (backgroundColor, contentColor, iconColor) = colorPalettes[index];
-    const image = 'assets/images/image_${index + 1}.png';
-    return Scaffold(
-      body: CircleRevealTransition(
-        backgroundColor: backgroundColor,
-        contentColor: contentColor,
-        iconColor: iconColor,
-        image: image,
-      ),
-    );
-  }
-}
-
-List<(Color backgroundColor, Color contentColor, Color iconColor)>
-    colorPalettes = [
-  (const Color(0xFFFFFACD), const Color(0xFF1F618D), Colors.white), // Palette 1
-  (const Color(0xFFD3D3D3), const Color(0xFF3498DB), Colors.white), // Palette 2
-  (const Color(0xFF800000), const Color(0xFF27AE60), Colors.white), // Palette 3
-  (const Color(0xFF2F4F4F), const Color(0xFFF1C40F), Colors.black), // Palette 4
-  (const Color(0xFF66CCCC), const Color(0xFFE67E22), Colors.black), // Palette 5
+List<PageData> pages = [
+  const PageData(
+      backgroundColor: Color(0xFF1F618D),
+      contentColor: Color(0xFFFFFACD),
+      image: 'assets/images/image_1.png'),
+  const PageData(
+      backgroundColor: Color(0xFF3498DB),
+      contentColor: Color(0xFFD3D3D3),
+      image: 'assets/images/image_2.png'),
+  const PageData(
+      backgroundColor: Color(0xFF27AE60),
+      contentColor: Color(0xFF800000),
+      image: 'assets/images/image_3.png'),
+  const PageData(
+      backgroundColor: Color(0xFFF1C40F),
+      contentColor: Color(0xFF2F4F4F),
+      image: 'assets/images/image_4.png'),
+  const PageData(
+      backgroundColor: Color(0xFFE67E22),
+      contentColor: Color(0xFF66CCCC),
+      image: 'assets/images/image_5.png'),
 ];
+
+class PageData {
+  final Color backgroundColor;
+  final Color contentColor;
+  final String image;
+
+  const PageData({
+    required this.backgroundColor,
+    required this.contentColor,
+    required this.image,
+  });
+}

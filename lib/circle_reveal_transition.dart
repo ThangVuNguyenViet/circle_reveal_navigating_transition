@@ -1,137 +1,153 @@
 import 'dart:math';
 
+import 'package:circle_reveal_navigating_transition/main.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class CircleRevealTransition extends StatefulWidget {
-  const CircleRevealTransition({
+class CircleRevealScreen extends StatelessWidget {
+  const CircleRevealScreen({
     super.key,
-    required this.backgroundColor,
-    required this.contentColor,
-    required this.iconColor,
-    required this.image,
+    this.animation = const AlwaysStoppedAnimation(0),
   });
 
-  final Color backgroundColor;
-  final Color contentColor;
-  final Color iconColor;
-  final String image;
-
-  @override
-  State<CircleRevealTransition> createState() => _CircleRevealTransitionState();
-}
-
-class _CircleRevealTransitionState extends State<CircleRevealTransition>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _animationController;
-
-  @override
-  void initState() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )
-      ..addListener(() {
-        setState(() {});
-      })
-      ..addStatusListener((status) {
-        setState(() {});
-      });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+  final Animation<double> animation;
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final left = size.width / 2;
-    final top = size.height * 4 / 5;
+    final routerDelegate = GoRouter.of(context).routerDelegate;
+    final lastMatch = routerDelegate.currentConfiguration.last;
+    final matchList = lastMatch is ImperativeRouteMatch
+        ? lastMatch.matches
+        : routerDelegate.currentConfiguration;
+    final currentPathUri = matchList.uri;
 
-    const imageWidth = 500.0;
-    final maxOffset = size.width / 2 + imageWidth / 2;
+    final page =
+        pages[int.parse(GoRouterState.of(context).uri.pathSegments.last)];
+    final pageInUrl = pages[int.parse(currentPathUri.pathSegments.last)];
 
-    double offsetPercent = 1;
-    if (_animationController.value <= .25) {
-      offsetPercent = -_animationController.value / .25;
-    } else if (_animationController.value >= .75) {
-      offsetPercent = (1 - _animationController.value) / .25;
-    }
+    final currentPage =
+        animation.status == AnimationStatus.forward ? page : pageInUrl;
+    final nextPage =
+        animation.status == AnimationStatus.forward ? pageInUrl : page;
 
-    final contentOffset = offsetPercent * maxOffset;
-    final contentScale = .6 + (.4 * (1 - offsetPercent.abs()));
+    return Scaffold(
+      body: AnimatedBuilder(
+        animation: animation,
+        builder: (context, child) {
+          var animationValue = animation.value;
 
-    return Stack(
-      children: [
-        CustomPaint(
-          painter: _CircleRevealTransitionPainter(
-            backgroundColor: widget.backgroundColor,
-            currentCircleColor: widget.contentColor,
-            nextCircleColor: Colors.blue,
-            circleCenterFinder: (Size size) => Offset(left, top),
-            transitionPercent: _animationController.value,
-          ),
-          size: size,
-        ),
-        Align(
-          alignment: const Alignment(0, -.5),
-          child: Transform(
-            transform: Matrix4.translationValues(contentOffset, 0, 0)
-              ..scale(contentScale, contentScale),
-            alignment: Alignment.center,
-            child: SizedBox(
-              width: imageWidth,
-              height: 300,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: Image.asset(
-                  widget.image,
-                  fit: BoxFit.cover,
+          if (animation.status == AnimationStatus.completed ||
+              animation.status == AnimationStatus.dismissed) {
+            animationValue = 0;
+          }
+
+          final size = MediaQuery.sizeOf(context);
+          final left = size.width / 2;
+          final top = size.height * 4 / 5;
+          const circleRadius = 36.0;
+
+          const imageWidth = 500.0;
+          final maxOffset = size.width / 2 + imageWidth / 2;
+
+          double offsetPercent = 1;
+          if (animationValue <= .25) {
+            offsetPercent = -animationValue / .25;
+          } else if (animationValue >= .75) {
+            offsetPercent = (1 - animationValue) / .25;
+          }
+
+          final contentOffset = offsetPercent * maxOffset;
+          final contentScale = .6 + (.4 * (1 - offsetPercent.abs()));
+
+          final imagePath =
+              animationValue < .5 ? currentPage.image : nextPage.image;
+
+          return Stack(
+            children: [
+              CustomPaint(
+                painter: _CircleRevealTransitionPainter(
+                  currentBackgroundColor: currentPage.backgroundColor,
+                  currentCircleColor: currentPage.contentColor,
+                  nextCircleColor: nextPage.contentColor,
+                  nextBackgroundColor: nextPage.backgroundColor,
+                  circleCenterFinder: (Size size) => Offset(left, top),
+                  transitionPercent: animationValue,
+                  baseCircleRadius: circleRadius,
+                ),
+                size: size,
+              ),
+              Align(
+                alignment: const Alignment(0, -.5),
+                child: Transform(
+                  transform: Matrix4.translationValues(contentOffset, 0, 0)
+                    ..scale(contentScale, contentScale),
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: imageWidth,
+                    height: 300,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: Image.asset(
+                        imagePath,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
-        if (_animationController.value > .1 || _animationController.value < .95)
-          Positioned(
-            left: left - 16,
-            top: top - 16,
-            child: GestureDetector(
-              onTap: () {
-                if (_animationController.isCompleted) {
-                  _animationController.reverse();
-                } else {
-                  _animationController.forward();
-                }
-              },
-              child: Icon(
-                Icons.arrow_forward_ios,
-                size: 32,
-                color: widget.iconColor,
-              ),
-            ),
-          ),
-      ],
+              if (animationValue < .1 || animationValue > .95)
+                Positioned(
+                  left: left - circleRadius,
+                  top: top - circleRadius,
+                  child: GestureDetector(
+                    onTap: () {
+                      final currentIndex = int.parse(
+                          GoRouterState.of(context).uri.pathSegments.last);
+                      final randomIndex = Random().nextInt(pages.length - 1);
+                      final otherPageIndexes =
+                          List.generate(pages.length, (index) => index)
+                            ..removeAt(currentIndex);
+                      final nextPageIndex = otherPageIndexes[randomIndex];
+                      context.push('/$nextPageIndex');
+                    },
+                    child: Container(
+                      color: Colors.transparent,
+                      width: circleRadius * 2,
+                      height: circleRadius * 2,
+                      child: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 32,
+                        color: animationValue < .1
+                            ? currentPage.backgroundColor
+                            : nextPage.backgroundColor,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
 
 class _CircleRevealTransitionPainter extends CustomPainter {
   _CircleRevealTransitionPainter({
-    required Color backgroundColor,
+    required Color currentBackgroundColor,
+    required Color nextBackgroundColor,
     required Color currentCircleColor,
     required Color nextCircleColor,
     required this.circleCenterFinder,
     this.transitionPercent = 0,
     this.baseCircleRadius = 36,
-  })  : backgroundPaint = Paint()..color = backgroundColor,
+  })  : currentBackgroundPaint = Paint()..color = currentBackgroundColor,
+        nextBackgroundPaint = Paint()..color = nextBackgroundColor,
         currentCirclePaint = Paint()..color = currentCircleColor,
         nextCirclePaint = Paint()..color = nextCircleColor;
 
-  final Paint backgroundPaint;
+  final Paint currentBackgroundPaint;
+  final Paint nextBackgroundPaint;
   final Paint currentCirclePaint;
   final Paint nextCirclePaint;
   final double transitionPercent;
@@ -163,16 +179,14 @@ class _CircleRevealTransitionPainter extends CustomPainter {
     // expands much, much slower
     final slowedExpansionPercent = pow(expansionPercent, 8);
 
-    final currentRadius = (maxRadius * slowedExpansionPercent)
-        // + baseCircleRadius
-        ;
+    final currentRadius = (maxRadius * slowedExpansionPercent);
 
     final currentCircleCenter = Offset(
         circleLeftBound + max(currentRadius, baseCircleRadius),
         baseCircleCenter.dy);
 
     // Paint the background
-    canvas.drawPaint(backgroundPaint);
+    canvas.drawPaint(currentBackgroundPaint);
 
     // Paint the static circle
     canvas.drawCircle(
@@ -181,11 +195,11 @@ class _CircleRevealTransitionPainter extends CustomPainter {
       currentCirclePaint,
     );
 
-    // Paint the new expanding circle
+    // Paint the new super expanding circle
     canvas.drawCircle(
       currentCircleCenter,
       currentRadius,
-      nextCirclePaint,
+      nextBackgroundPaint,
     );
   }
 
@@ -224,14 +238,25 @@ class _CircleRevealTransitionPainter extends CustomPainter {
         Offset(circleCurrentCenterX, baseCircleCenter.dy);
 
     // Paint the background
-    canvas.drawPaint(nextCirclePaint);
+    canvas.drawPaint(nextBackgroundPaint);
 
     // Paint the circle
     canvas.drawCircle(
       currentCircleCenter,
       currentRadius,
-      backgroundPaint,
+      currentBackgroundPaint,
     );
+
+    // Paint the static circle
+    if (contractionPercent > .9) {
+      final newCircleContractionPercent = (contractionPercent - .9) / .1;
+      final newCircleRadius = baseCircleRadius * newCircleContractionPercent;
+      canvas.drawCircle(
+        baseCircleCenter,
+        newCircleRadius,
+        nextCirclePaint,
+      );
+    }
   }
 
   @override
