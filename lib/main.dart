@@ -1,4 +1,4 @@
-import 'package:circle_reveal_navigating_transition/circle_reveal_transition.dart';
+import 'package:circle_reveal_navigating_transition/circle_reveal_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
