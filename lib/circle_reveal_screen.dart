@@ -50,7 +50,7 @@ class CircleRevealScreen extends StatelessWidget {
           final imageWidth = size.width / 2;
           final maxOffset = size.width / 2 + imageWidth / 2;
 
-          late final double offsetPercent;
+          var offsetPercent = 1.0;
           if (animationValue <= .25) {
             offsetPercent = -animationValue / .25;
           } else if (animationValue >= .75) {
@@ -109,7 +109,7 @@ class CircleRevealScreen extends StatelessWidget {
                           List.generate(pages.length, (index) => index)
                             ..removeAt(currentIndex);
                       final nextPageIndex = otherPageIndexes[randomIndex];
-                      context.push('/$nextPageIndex');
+                      context.go('/$nextPageIndex');
                     },
                     child: Container(
                       color: Colors.transparent,
