@@ -61,7 +61,7 @@ class _CircleRevealScreenState extends State<CircleRevealScreen>
     final imageWidth = size.width / 2;
     final maxOffset = size.width / 2 + imageWidth / 2;
 
-    late final double offsetPercent;
+    var offsetPercent = 0.0;
     if (animationValue <= .25) {
       offsetPercent = -animationValue / .25;
     } else if (animationValue >= .75) {
