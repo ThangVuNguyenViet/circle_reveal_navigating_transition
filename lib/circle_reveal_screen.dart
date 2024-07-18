@@ -42,14 +42,15 @@ class CircleRevealScreen extends StatelessWidget {
           }
 
           final size = MediaQuery.sizeOf(context);
-          final left = size.width / 2;
-          final top = size.height * 4 / 5;
+
+          final circlePositionLeft = size.width / 2;
+          final circlePositionTop = size.height * 4 / 5;
           const circleRadius = 36.0;
 
           final imageWidth = size.width / 2;
           final maxOffset = size.width / 2 + imageWidth / 2;
 
-          double offsetPercent = 1;
+          late final double offsetPercent;
           if (animationValue <= .25) {
             offsetPercent = -animationValue / .25;
           } else if (animationValue >= .75) {
@@ -70,7 +71,8 @@ class CircleRevealScreen extends StatelessWidget {
                   currentCircleColor: currentPage.contentColor,
                   nextCircleColor: nextPage.contentColor,
                   nextBackgroundColor: nextPage.backgroundColor,
-                  circleCenterFinder: (Size size) => Offset(left, top),
+                  circleCenterFinder: (Size size) =>
+                      Offset(circlePositionLeft, circlePositionTop),
                   transitionPercent: animationValue,
                   baseCircleRadius: circleRadius,
                 ),
@@ -96,8 +98,8 @@ class CircleRevealScreen extends StatelessWidget {
               ),
               if (animationValue < .1 || animationValue > .95)
                 Positioned(
-                  left: left - circleRadius,
-                  top: top - circleRadius,
+                  left: circlePositionLeft - circleRadius,
+                  top: circlePositionTop - circleRadius,
                   child: GestureDetector(
                     onTap: () {
                       final currentIndex = int.parse(
