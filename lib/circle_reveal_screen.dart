@@ -46,7 +46,7 @@ class CircleRevealScreen extends StatelessWidget {
           final top = size.height * 4 / 5;
           const circleRadius = 36.0;
 
-          const imageWidth = 500.0;
+          final imageWidth = size.width / 2;
           final maxOffset = size.width / 2 + imageWidth / 2;
 
           double offsetPercent = 1;
@@ -84,12 +84,11 @@ class CircleRevealScreen extends StatelessWidget {
                   alignment: Alignment.center,
                   child: SizedBox(
                     width: imageWidth,
-                    height: 300,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(32),
                       child: Image.asset(
                         imagePath,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.fitWidth,
                       ),
                     ),
                   ),

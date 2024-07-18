@@ -32,8 +32,8 @@ final _router = GoRouter(
         return CustomTransitionPage(
           key: ValueKey(
               '/${state.pathParameters['index']} ${state.pageKey.value}'),
-          transitionDuration: const Duration(milliseconds: 1500),
-          reverseTransitionDuration: const Duration(milliseconds: 1500),
+          transitionDuration: const Duration(milliseconds: 1000),
+          reverseTransitionDuration: const Duration(milliseconds: 1000),
           child: const SizedBox(),
           transitionsBuilder:
               (context, primaryAnimation, secondaryAnimation, child) {
@@ -60,35 +60,41 @@ final _router = GoRouter(
 
 List<PageData> pages = [
   const PageData(
-      backgroundColor: Color(0xFF1F618D),
-      contentColor: Color(0xFFFFFACD),
-      image: 'assets/images/image_1.png'),
+    backgroundColor: Color(0xFFe57482),
+    contentColor: Color(0xFFfffacd),
+    image: 'assets/images/image_1.jpg',
+    name: 'Ahri',
+  ),
   const PageData(
-      backgroundColor: Color(0xFF3498DB),
-      contentColor: Color(0xFFD3D3D3),
-      image: 'assets/images/image_2.png'),
+    backgroundColor: Color(0xFF84a0c2),
+    contentColor: Color(0xFFe6e6e6),
+    image: 'assets/images/image_2.jpg',
+    name: 'Ashe',
+  ),
   const PageData(
-      backgroundColor: Color(0xFF27AE60),
-      contentColor: Color(0xFF800000),
-      image: 'assets/images/image_3.png'),
+    backgroundColor: Color(0xFF7a775f),
+    contentColor: Color(0xFFb4b4b4),
+    image: 'assets/images/image_3.jpg',
+    name: 'LeeSin',
+  ),
   const PageData(
-      backgroundColor: Color(0xFFF1C40F),
-      contentColor: Color(0xFF2F4F4F),
-      image: 'assets/images/image_4.png'),
-  const PageData(
-      backgroundColor: Color(0xFFE67E22),
-      contentColor: Color(0xFF66CCCC),
-      image: 'assets/images/image_5.png'),
+    backgroundColor: Color(0xFF588bae),
+    contentColor: Color(0xFFf2d025),
+    image: 'assets/images/image_4.jpg',
+    name: 'Yasuo',
+  ),
 ];
 
 class PageData {
   final Color backgroundColor;
   final Color contentColor;
   final String image;
+  final String name;
 
   const PageData({
     required this.backgroundColor,
     required this.contentColor,
     required this.image,
+    required this.name,
   });
 }
