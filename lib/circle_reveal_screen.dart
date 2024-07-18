@@ -1,28 +1,21 @@
 import 'dart:math';
 
+import 'package:circle_reveal_navigating_transition/main.dart';
 import 'package:flutter/material.dart';
 
-class CircleRevealTransition extends StatefulWidget {
-  const CircleRevealTransition({
+class CircleRevealScreen extends StatefulWidget {
+  const CircleRevealScreen({
     super.key,
-    required this.backgroundColor,
-    required this.contentColor,
-    required this.iconColor,
-    required this.image,
   });
 
-  final Color backgroundColor;
-  final Color contentColor;
-  final Color iconColor;
-  final String image;
-
   @override
-  State<CircleRevealTransition> createState() => _CircleRevealTransitionState();
+  State<CircleRevealScreen> createState() => _CircleRevealScreenState();
 }
 
-class _CircleRevealTransitionState extends State<CircleRevealTransition>
+class _CircleRevealScreenState extends State<CircleRevealScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
+  var pageIndex = 0;
 
   @override
   void initState() {
@@ -34,7 +27,12 @@ class _CircleRevealTransitionState extends State<CircleRevealTransition>
         setState(() {});
       })
       ..addStatusListener((status) {
-        setState(() {});
+        if (status == AnimationStatus.completed) {
+          _animationController.reset();
+          setState(() {
+            pageIndex = (pageIndex + 1) % pages.length;
+          });
+        }
       });
     super.initState();
   }
@@ -47,91 +45,109 @@ class _CircleRevealTransitionState extends State<CircleRevealTransition>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final left = size.width / 2;
-    final top = size.height * 4 / 5;
+    final animationValue = _animationController.value;
 
-    const imageWidth = 500.0;
+    final currentPage = pages[pageIndex];
+    final nextPage = pages[(pageIndex + 1) % pages.length];
+
+    final imagePath = animationValue < .5 ? currentPage.image : nextPage.image;
+
+    final size = MediaQuery.sizeOf(context);
+
+    final circlePositionLeft = size.width / 2;
+    final circlePositionTop = size.height * 4 / 5;
+    const circleRadius = 36.0;
+
+    final imageWidth = size.width / 2;
     final maxOffset = size.width / 2 + imageWidth / 2;
 
-    double offsetPercent = 1;
-    if (_animationController.value <= .25) {
-      offsetPercent = -_animationController.value / .25;
-    } else if (_animationController.value >= .75) {
-      offsetPercent = (1 - _animationController.value) / .25;
+    late final double offsetPercent;
+    if (animationValue <= .25) {
+      offsetPercent = -animationValue / .25;
+    } else if (animationValue >= .75) {
+      offsetPercent = (1 - animationValue) / .25;
     }
 
     final contentOffset = offsetPercent * maxOffset;
     final contentScale = .6 + (.4 * (1 - offsetPercent.abs()));
 
-    return Stack(
-      children: [
-        CustomPaint(
-          painter: _CircleRevealTransitionPainter(
-            backgroundColor: widget.backgroundColor,
-            currentCircleColor: widget.contentColor,
-            nextCircleColor: Colors.blue,
-            circleCenterFinder: (Size size) => Offset(left, top),
-            transitionPercent: _animationController.value,
+    return Scaffold(
+      body: Stack(
+        children: [
+          CustomPaint(
+            painter: _CircleRevealTransitionPainter(
+              currentBackgroundColor: currentPage.backgroundColor,
+              currentCircleColor: currentPage.contentColor,
+              nextCircleColor: nextPage.contentColor,
+              nextBackgroundColor: nextPage.backgroundColor,
+              circleCenterFinder: (Size size) =>
+                  Offset(circlePositionLeft, circlePositionTop),
+              transitionPercent: animationValue,
+              baseCircleRadius: circleRadius,
+            ),
+            size: size,
           ),
-          size: size,
-        ),
-        Align(
-          alignment: const Alignment(0, -.5),
-          child: Transform(
-            transform: Matrix4.translationValues(contentOffset, 0, 0)
-              ..scale(contentScale, contentScale),
-            alignment: Alignment.center,
-            child: SizedBox(
-              width: imageWidth,
-              height: 300,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: Image.asset(
-                  widget.image,
-                  fit: BoxFit.cover,
+          Align(
+            alignment: const Alignment(0, -.5),
+            child: Transform(
+              transform: Matrix4.translationValues(contentOffset, 0, 0)
+                ..scale(contentScale, contentScale),
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: imageWidth,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: Image.asset(
+                    imagePath,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        if (_animationController.value > .1 || _animationController.value < .95)
-          Positioned(
-            left: left - 16,
-            top: top - 16,
-            child: GestureDetector(
-              onTap: () {
-                if (_animationController.isCompleted) {
-                  _animationController.reverse();
-                } else {
+          if (animationValue < .1 || animationValue > .95)
+            Positioned(
+              left: circlePositionLeft - circleRadius,
+              top: circlePositionTop - circleRadius,
+              child: GestureDetector(
+                onTap: () {
                   _animationController.forward();
-                }
-              },
-              child: Icon(
-                Icons.arrow_forward_ios,
-                size: 32,
-                color: widget.iconColor,
+                },
+                child: Container(
+                  color: Colors.transparent,
+                  width: circleRadius * 2,
+                  height: circleRadius * 2,
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 32,
+                    color: animationValue < .1
+                        ? currentPage.backgroundColor
+                        : nextPage.backgroundColor,
+                  ),
+                ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
 
 class _CircleRevealTransitionPainter extends CustomPainter {
   _CircleRevealTransitionPainter({
-    required Color backgroundColor,
+    required Color currentBackgroundColor,
+    required Color nextBackgroundColor,
     required Color currentCircleColor,
     required Color nextCircleColor,
     required this.circleCenterFinder,
     this.transitionPercent = 0,
     this.baseCircleRadius = 36,
-  })  : backgroundPaint = Paint()..color = backgroundColor,
+  })  : currentBackgroundPaint = Paint()..color = currentBackgroundColor,
+        nextBackgroundPaint = Paint()..color = nextBackgroundColor,
         currentCirclePaint = Paint()..color = currentCircleColor,
         nextCirclePaint = Paint()..color = nextCircleColor;
 
-  final Paint backgroundPaint;
+  final Paint currentBackgroundPaint;
+  final Paint nextBackgroundPaint;
   final Paint currentCirclePaint;
   final Paint nextCirclePaint;
   final double transitionPercent;
@@ -163,16 +179,14 @@ class _CircleRevealTransitionPainter extends CustomPainter {
     // expands much, much slower
     final slowedExpansionPercent = pow(expansionPercent, 8);
 
-    final currentRadius = (maxRadius * slowedExpansionPercent)
-        // + baseCircleRadius
-        ;
+    final currentRadius = (maxRadius * slowedExpansionPercent);
 
     final currentCircleCenter = Offset(
         circleLeftBound + max(currentRadius, baseCircleRadius),
         baseCircleCenter.dy);
 
     // Paint the background
-    canvas.drawPaint(backgroundPaint);
+    canvas.drawPaint(currentBackgroundPaint);
 
     // Paint the static circle
     canvas.drawCircle(
@@ -181,11 +195,11 @@ class _CircleRevealTransitionPainter extends CustomPainter {
       currentCirclePaint,
     );
 
-    // Paint the new expanding circle
+    // Paint the new super expanding circle
     canvas.drawCircle(
       currentCircleCenter,
       currentRadius,
-      nextCirclePaint,
+      nextBackgroundPaint,
     );
   }
 
@@ -224,14 +238,25 @@ class _CircleRevealTransitionPainter extends CustomPainter {
         Offset(circleCurrentCenterX, baseCircleCenter.dy);
 
     // Paint the background
-    canvas.drawPaint(nextCirclePaint);
+    canvas.drawPaint(nextBackgroundPaint);
 
     // Paint the circle
     canvas.drawCircle(
       currentCircleCenter,
       currentRadius,
-      backgroundPaint,
+      currentBackgroundPaint,
     );
+
+    // Paint the static circle
+    if (contractionPercent > .9) {
+      final newCircleContractionPercent = (contractionPercent - .9) / .1;
+      final newCircleRadius = baseCircleRadius * newCircleContractionPercent;
+      canvas.drawCircle(
+        baseCircleCenter,
+        newCircleRadius,
+        nextCirclePaint,
+      );
+    }
   }
 
   @override

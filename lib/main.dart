@@ -1,4 +1,4 @@
-import 'package:circle_reveal_navigating_transition/circle_reveal_transition.dart';
+import 'package:circle_reveal_navigating_transition/circle_reveal_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,35 +22,48 @@ final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const HomeScreen(),
+      builder: (context, state) => const CircleRevealScreen(),
     ),
   ],
 );
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    const index = 0;
-    final (backgroundColor, contentColor, iconColor) = colorPalettes[index];
-    const image = 'assets/images/image_${index + 1}.png';
-    return Scaffold(
-      body: CircleRevealTransition(
-        backgroundColor: backgroundColor,
-        contentColor: contentColor,
-        iconColor: iconColor,
-        image: image,
-      ),
-    );
-  }
-}
-
-List<(Color backgroundColor, Color contentColor, Color iconColor)>
-    colorPalettes = [
-  (const Color(0xFFFFFACD), const Color(0xFF1F618D), Colors.white), // Palette 1
-  (const Color(0xFFD3D3D3), const Color(0xFF3498DB), Colors.white), // Palette 2
-  (const Color(0xFF800000), const Color(0xFF27AE60), Colors.white), // Palette 3
-  (const Color(0xFF2F4F4F), const Color(0xFFF1C40F), Colors.black), // Palette 4
-  (const Color(0xFF66CCCC), const Color(0xFFE67E22), Colors.black), // Palette 5
+List<PageData> pages = [
+  const PageData(
+    backgroundColor: Color(0xFFe57482),
+    contentColor: Color(0xFFfffacd),
+    image: 'assets/images/image_1.jpg',
+    name: 'Ahri',
+  ),
+  const PageData(
+    backgroundColor: Color(0xFF84a0c2),
+    contentColor: Color(0xFFe6e6e6),
+    image: 'assets/images/image_2.jpg',
+    name: 'Ashe',
+  ),
+  const PageData(
+    backgroundColor: Color(0xFF7a775f),
+    contentColor: Color(0xFFb4b4b4),
+    image: 'assets/images/image_3.jpg',
+    name: 'LeeSin',
+  ),
+  const PageData(
+    backgroundColor: Color(0xFF588bae),
+    contentColor: Color(0xFFf2d025),
+    image: 'assets/images/image_4.jpg',
+    name: 'Yasuo',
+  ),
 ];
+
+class PageData {
+  final Color backgroundColor;
+  final Color contentColor;
+  final String image;
+  final String name;
+
+  const PageData({
+    required this.backgroundColor,
+    required this.contentColor,
+    required this.image,
+    required this.name,
+  });
+}
